@@ -1,0 +1,31 @@
+{
+  "name": "mmm-caldav",
+  "version": "1.0.0",
+  "description": "CalDAV translator for MagicMirror",
+  "main": "MMM-CalDAV.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MMRIZE/MMM-CalDAV.git"
+  },
+  "keywords": [
+    "MagicMirror",
+    "CalDAV"
+  ],
+  "author": "eouia0819@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MMRIZE/MMM-CalDAV/issues"
+  },
+  "homepage": "https://github.com/MMRIZE/MMM-CalDAV#readme",
+  "dependencies": {
+    "dav": "^1.8.0",
+    "nocache": "^3.0.1",
+    "node-fetch": "^2.6.1",
+    "scrapegoat": "^2.0.0",
+    "simple-caldav": "^0.7.1",
+    "tsdav": "^1.1.1"
+  }
+}
