@@ -77,3 +77,7 @@ The real extracted & parsed result will be stored under `modules/MMM-CalDAV/publ
 ## Release
 ### **`1.0.0`** - 2021-09-29
 
+## Author
+- Seongnoh Yi (eouia0819@gmail.com)
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y56IFLK)
