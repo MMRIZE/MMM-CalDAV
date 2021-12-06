@@ -49,8 +49,8 @@ npm install
 
 Then it will provide the ICAL URL like;
 ```
-https://localhost:8080/CALDAV/company.ics
-https://localhost:8080/CALDAV/homenas.ics 
+http://localhost:8080/CALDAV/company.ics
+http://localhost:8080/CALDAV/homenas.ics 
 ```
 You can use this URL for your calendar modules.
 
