@@ -278,7 +278,7 @@ servers: [
 ```
 
 ## Not a bug but,...
-- Connecting to CalDAV server and getting calendar data might take a some time. So on the first bootup after installation of this module, the calendar module could not load any data. Please wait a while to next updating cycle. After the first storing ICAL file, the events will be reflexed on next calendar's update timne regardless of rebooting.
+- Connecting to CalDAV server and getting calendar data might take a some time. So on the first bootup after installation of this module, the calendar module could not load any data. Please wait a while to next updating cycle. After the first storing ICAL file, the events will be reflexed on next calendar's update time regardless of rebooting.
 - I have not tested all the possible CalDAV server. So if you can find any issue on the various CalDAVs, feel free to make a PR for it.
 - For the purpose of this module, the generated `.ics` is designed to be hidden and not accessible without auth intentionally. You should use `CALDAV_SERVER_USERNAME` and `CALDAV_SERVER_PASSWORD` with `Basic` auth to access that url.
 - If the name of generated `.ics` is duplicated, it will be overwritten. Separate them with `icsName` by force
@@ -287,9 +287,10 @@ servers: [
 
 ## Release
 ### `2.0.0` (2023-10-25)
-- Newly rebuild from scratch
+- Newly rebuilt from scratch
 - OAUTH supported (For Google Calendar)
-- more secure and efficiently
+- Multi calendars/servers in one module. 
+- More secure and efficiently
 
 ### `1.0.0` (2021-09-29)
 - released
