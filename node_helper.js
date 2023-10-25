@@ -120,14 +120,12 @@ module.exports = NodeHelper.create({
         return res.status(401).send()
       }
       const [ username, password ] = Buffer.from(auth.slice(6), 'base64').toString().split(':')
-      console.log(username, password)
       if (username !== process.env.CALDAV_SERVICE_USERNAME || password !== process.env.CALDAV_SERVICE_PASSWORD) {
         console.log('[CALDAV] Invalid username or password')
         res.set('WWW-Authenticate', 'Basic realm="MMM-CalDAV Service"')
         return res.status(401).send()
       } else {
         const filePath = path.resolve(__dirname, 'service', realFile)
-        console.log(filePath)
         if (existsSync(filePath)) {
           createReadStream(filePath).pipe(res)
         } else {
