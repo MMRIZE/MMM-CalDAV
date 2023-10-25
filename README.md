@@ -99,6 +99,7 @@ The real extracted & parsed result will be stored under `modules/MMM-CalDAV/serv
 |`timeRangeEnd`| config value | You can override speicfic days for this server.|
 |`updateInterval`| config value | You can override the specific interval for this server.|
 |`calendars`| [] | (Array of string/object) Calendar filter by its name. [] would be all calendars. |
+
 There would be more properties, but 99.99% of users will not need them.
 
 #### calendar object
