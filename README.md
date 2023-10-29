@@ -108,8 +108,8 @@ There would be more properties, but 99.99% of users will not need them.
 calendars: ["Family", "Work"], // Get events from "Family" and "Work" calendar then will serve them as "Family.ics" and "Work.ics"
 
 calendars: [
-  {displayName: "Family", icsName: "private.ics"}, // Get events from "Family" calendar then will serve them as "private.ics"
-  {displayName: "Work", icsName: "company.ics"}, // Get events from "Work" calendar then will serve them as "company.ics"
+  {displayName: "Family", icsName: "private"}, // Get events from "Family" calendar then will serve them as "private.ics"
+  {displayName: "Work", icsName: "company"}, // Get events from "Work" calendar then will serve them as "company.ics"
 ],
 ```
 
