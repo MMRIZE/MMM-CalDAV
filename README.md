@@ -129,6 +129,7 @@ The real extracted & parsed result will be stored under `modules/MMM-CalDAV/serv
 
 There would be more properties, but 99.99% of users would not need them.
 
+
 #### `targets` array
 `targets: [ ... ]` array could have string(the name of calendar/addressBook) or object(A pair of original calendar/addressBook name and the result ics name)
 ```js
@@ -139,6 +140,7 @@ targets: [ "Family", "Work" ], // Get events from "Family" and "Work" calendar/a
 targets: [
   { displayName: "Family", icsName: "private" }, // Get events from "Family" calendar/addressBook then will serve them as "SOME_private.ics"
   { displayName: "Work", icsName: "company" }, // Get events from "Work" calendar/addressBook then will serve them as "Some_company.ics"
+
 ],
 
 targets: [], // Get events from all calendars/addressBooks then will serve them as "SOME_ORIGINALNAME.ics"
