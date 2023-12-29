@@ -1,12 +1,11 @@
 {
   "name": "mmm-caldav",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "CalDAV translator for MagicMirror",
   "main": "MMM-CalDAV.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "cp env.example .env",
-    "postupgrade": "cp env.example .env"
+    "postinstall": "cp env.example .env"
   },
   "repository": {
     "type": "git",
@@ -23,9 +22,9 @@
   },
   "homepage": "https://github.com/MMRIZE/MMM-CalDAV#readme",
   "dependencies": {
-    "dav": "^1.8.0",
     "dotenv": "^16.3.1",
-    "tsdav": "^2.0.5"
+    "tsdav": "^2.0.7",
+    "vcard-parser": "^1.0.0"
   },
   "devDependencies": {
     "googleapis": "^128.0.0",
