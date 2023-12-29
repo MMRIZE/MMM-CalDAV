@@ -1,16 +1,12 @@
 const path = require('path')
 require('dotenv').config({ path: path.resolve(__dirname, '.env') })
 const { DAVClient, DAVNamespace } = require('tsdav')
+const vCard = require('vcard-parser')
 const fs = require('fs').promises
 const createReadStream = require('fs').createReadStream
 const existsSync = require('fs').existsSync
-const basicAuth = require('express-basic-auth')
-const express = require('express')
 
 var NodeHelper = require('node_helper')
-const e = require('express')
-const { exists } = require('fs')
-
 class Fetcher {
   constructor(options) {
     const prefix = options.envPrefix || ''
@@ -24,19 +20,19 @@ class Fetcher {
     this.options = { ...options, credentials }
     this.timer = null
     try {
-      this.work(options)
+      this.work()
     } catch (e) {
       console.error(e)
     }
   }
 
-  async work(options) {
+  async work() {
     clearTimeout(this.timer)
     this.timer = null
+    const options = { ...this.options }
+    const { serverUrl, credentials, authMethod, defaultAccountType, timeRangeStart, timeRangeEnd, expand, useMultiGet, targets, envPrefix } = options
+    console.log(`[CALDAV] Fetching ${envPrefix} : ${defaultAccountType} ...`)
 
-    console.log(`[CALDAV] Fetching ${this.options.envPrefix} ...`)
-
-    const { serverUrl, credentials, authMethod, defaultAccountType, timeRangeStart, timeRangeEnd, expand, useMultiGet, calendars } = this.options
     const client = new DAVClient({
       serverUrl,
       credentials,
@@ -46,58 +42,127 @@ class Fetcher {
       useMultiGet,
     })
 
-    const buildVcalendar = (vevents, displayName) => {
-      return `BEGIN:VCALENDAR
-${vevents}
-END:VCALENDAR`
+    const dateFormat = (dt) => {
+      return `${dt.getFullYear()}${(dt.getMonth() + 1).toString().padStart(2, '0')}${dt.getDate().toString().padStart(2, '0')}`
     }
 
-    const today = new Date()
-    console.log(timeRangeStart, timeRangeEnd)
-    const start = new Date(new Date(today.valueOf()).setDate(today.getDate() + timeRangeStart)).toISOString()
-    const end = new Date(new Date(today.valueOf()).setDate(today.getDate() + timeRangeEnd)).toISOString()
+    const convertDate = (str) => {
+      let formatted = ''
+      if (/^\d{8}$/.test(str)) {
+        formatted = str.replace(
+          /(\d{4})(\d{2})(\d{2})/,
+          '$1-$2-$3'
+        )
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        formatted = str
+      } else {
+        formatted = new Date(str).toISOString().slice(0, 10)
+      }
+      return formatted
+    }
+
+    const saveIcs = async (fileId, vevents) => {
+      if (vevents.length === 0) return
+      const buildVcalendar = (vevents) => {
+      return `BEGIN:VCALENDAR
+PRODID:-//github.com/MMRIZE/MMM-CalDAV
+VERSION:2.0
+${vevents}
+END:VCALENDAR`
+      }
+      const fileCoded = encodeURIComponent(fileId || 'untitled')
+      let fileName = encodeURI(envPrefix + (fileCoded).replace(/[^\w\s]/g, '_') + '.ics')
+      const filePath = path.resolve(__dirname, 'service', '.' + fileName)
+      await fs.writeFile(filePath, buildVcalendar(vevents))
+      console.log(`[CALDAV] File: ${fileName} is refreshed.`)
+    }
+
+    const inTargets = (dispName, targets) => {
+      if (Array.isArray(targets) && targets.length > 0) {
+        return targets.some(c => c.displayName === dispName)
+      } else {
+        return true
+      }
+    }
 
     try {
       await client.login()
-      const fetchedCalendars = await client.fetchCalendars()
-      for (let calendar of fetchedCalendars) {
-        if (Array.isArray(calendars) && calendars.length > 0 && !calendars.some(c => c.displayName === calendar.displayName)) continue
-        const objects = await client.fetchCalendarObjects({
-          calendar,
-          timeRange: { start, end },
-          expand,
-          useMultiGet,
-        })
+      if (defaultAccountType === 'carddav') { //carddav
+        const fetchedAddressBooks = await client.fetchAddressBooks()
+        for (let addressBook of fetchedAddressBooks) {
+          //console.log(addressBook) /* To help to gather addressBook info, especially displayName */
+          if (!inTargets(addressBook.displayName, targets)) continue
+          const birthdays = []
+          const vcards = await client.fetchVCards({
+            addressBook,
+          })
+          for (let vcard of vcards) {
+            // console.log(vcard) /* To help to gather vcard info, especially data */
+            const card = vCard.parse(vcard.data.toString())
+            const birthday = card?.bday?.[0]?.value ?? false
+            if (birthday) {
+              const uid = card?.uid?.[ 0 ]?.value ?? options.envPrefix + Date.now()
+              const bday = new Date(convertDate(birthday))
+              const bdayEnd = new Date(bday.getFullYear(), bday.getMonth(), bday.getDate() + 1)
+              const rev = new Date(card?.rev?.[ 0 ]?.value ?? Date.now())
+              const fn = card?.fn?.[ 0 ]?.value ?? (card?.n?.[ 0 ]?.value).join(' ') ?? 'Unknown'
 
-        const icsName = encodeURI((calendars[ calendars.findIndex(c => c.displayName === calendar.displayName) ]?.icsName || calendar.displayName)).replace(/[^\w\s]/g, '_') + '.ics'
-        console.log(`[CALDAV] ${calendar.displayName}(${icsName}) has ${objects.length} events`)
-        const vevents = objects.reduce((result, { data }) => {
-          const txt = data.toString()
-          // extract all BEGIN:VEVENT ... END:VEVENT in txt
-          const regex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/gm
-          const matches = txt.match(regex)
-          if (matches) {
-            return result + matches.join('\r\n') + '\r\n'
-          } else {
-            return result
+
+              birthdays.push(`BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${rev.toISOString().replace(/[-:]/g, '')}
+DTSTART;VALUE=DATE:${dateFormat(bday)}
+DTEND;VALUE=DATE:${dateFormat(bdayEnd)}
+SUMMARY:${fn}
+RRULE:FREQ=YEARLY
+END:VEVENT`)
+            }
           }
-        }, '')
+          const fileName = targets[ targets.findIndex(c => c.displayName === addressBook.displayName) ]?.icsName || addressBook.displayName || ''
+          saveIcs(fileName, birthdays.join('\r\n'))
+        }
+      } else { // caldav
+        const today = new Date()
+        const start = new Date(new Date(today.valueOf()).setDate(today.getDate() + timeRangeStart)).toISOString()
+        const end = new Date(new Date(today.valueOf()).setDate(today.getDate() + timeRangeEnd)).toISOString()
 
-        var filePath = path.resolve(__dirname, 'service', '.' + icsName)
-        await fs.writeFile(filePath, buildVcalendar(vevents, calendar.displayName))
-        console.log(`[CALDAV] ${icsName} is refreshed.`)
+        const fetchedCalendars = await client.fetchCalendars()
+        for (let calendar of fetchedCalendars) {
+          if (!inTargets(calendar.displayName, targets)) continue
+          const objects = await client.fetchCalendarObjects({
+            calendar,
+            timeRange: { start, end },
+            expand,
+            useMultiGet,
+          })
+
+          const vevents = objects.reduce((result, { data }) => {
+            const txt = data.toString()
+            const regex = /BEGIN:VEVENT[\s\S]*?END:VEVENT/gm
+            const matches = txt.match(regex)
+            if (matches) {
+              return result + matches.join('\r\n') + '\r\n'
+            } else {
+              return result
+            }
+          }, '')
+          const fileName = targets[ targets.findIndex(c => c.displayName === calendar.displayName) ]?.icsName || calendar.displayName || ''
+          saveIcs(fileName, vevents)
+
+        }
       }
+    } catch (e) {
+      console.log(`[CALDAV] ${options.envPrefix} - Fetch failed. It will retry after updateInterval.`)
+      //clearTimeout(this.timer)
+      //this.timer = null
+      console.error(e)
+    } finally {
       this.timer = setTimeout(() => {
-        console.log(`[CALDAV] Try to refresh... ${options.envPrefix} ...`)
-        this.work(options)
+        this.work()
         return
       }, options.updateInterval)
-    } catch (e) {
-      clearTimeout(this.timer)
-      this.timer = null
-      console.error(e)
+      return
     }
-    return
   }
 }
 
@@ -109,8 +174,7 @@ module.exports = NodeHelper.create({
     this.seed = Math.random()
     this.fetchers = []
 
-    this.expressApp.get('/CALDAV/:file', (req, res, next) => { 
-      console.log('CALDAV', req.params.file)
+    this.expressApp.get('/CALDAV/:file', (req, res, next) => {
       const requested = req.params.file
       const realFile = '.' + requested
       const auth = req.get('Authorization')

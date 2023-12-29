@@ -13,7 +13,7 @@ Module.register('MMM-CalDAV', {
       serverUrl: 'https://INVALIDCALDAVSERVER.com',
       authMethod: 'Basic',
       defaultAccountType: 'caldav',
-      calendars: [],
+      targets: [],
       timeRangeStart: this.config.timeRangeStart,
       timeRangeEnd: this.config.timeRangeEnd,
       expand: true,
@@ -22,12 +22,15 @@ Module.register('MMM-CalDAV', {
       credentials: {},
     }
     this.config.servers = this.config.servers.map((server) => {
-      if (!Array.isArray(server.calendars)) server.calendars = []
-      const calendars = server.calendars.map((calendar) => {
-        if (typeof calendar === 'string') calendar = { displayName: calendar }
-        return (typeof calendar === 'object' && calendar?.displayName) ? { ...{ icsName: encodeURIComponent(calendar.displayName)}, ...calendar } : {}
+      if (server?.accountType === 'carddav') server.defaultAccountType = 'carddav'
+      if (!Array.isArray(server.targets)) {
+        server.targets = []
+      }
+      const targets = server.targets.map((target) => {
+        if (typeof target === 'string') target = { displayName: target }
+        return (typeof target === 'object' && target?.displayName) ? { ...{ icsName: target.displayName }, ...target } : {}
       })
-      return { ...defaultServer, ...server,  calendars}
+      return { ...defaultServer, ...server, targets }
     })
     this.sendSocketNotification('REGISTER', this.config)
   },
