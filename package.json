@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/MMRIZE/MMM-CalDAV#readme",
   "dependencies": {
-    "tsdav": "^2.4.0",
+    "tsdav": "^2.5.0",
     "vcard-parser": "^1.0.0"
   },
   "devDependencies": {
